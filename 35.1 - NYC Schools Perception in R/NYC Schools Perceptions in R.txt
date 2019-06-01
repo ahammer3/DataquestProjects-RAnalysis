@@ -1,0 +1,296 @@
+# NYC Schools Perceptions Notes
+This project will part of a few written in R to get familiar with the language. The formatting will be in an already familiar markdown style. Basic analysis and visualizations will be shown here, and for more, visit more projects in the R github repo.
+
+## Introduction
+Skills explored in this project:
+* Simplifying data frames to include only data necessary for your analysis by selecting variables, filtering by variable values, and creating new variables
+* Ensuring data are in the proper format for your analysis by changing data types (character to numeric) and parsing numbers from strings
+* Joining multiple data frames using keys
+* Reshaping data frames to suit different types of analyses
+* Deciding on and implementing several techniques for dealing with missing data
+* Consulting metadata to learn about contents of your data set and plan data cleaning tasks
+* Using correlation analysis to quantify the strength of relationships between variables
+
+In this project, we will work with and analyze a real life dataset: Data on parent, student, and teacher perceptions of New York City schools collected using surveys: https://data.cityofnewyork.us/Education/2011-NYC-School-Survey/mnz3-dyi8.
+
+Before we get started though, a bit about the soft skills that portfolio projects bring:
+* Technical competence
+* Ability to reason about data
+* Ability to communicate about analysis, findings, and their significance
+
+And the next section will describe a bit about R Notebooks (https://www.rstudio.com/resources/webinars/introducing-notebooks-with-r-markdown/), very similar to the Jupyter Notebooks that Python workers are so used to.
+
+Note: All code in this project will be preceded and followed by a break, and also follow the {r} markdown symbol.
+
+Note 2: Perhaps useful cheatsheet on R markdown: https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf.
+
+## R Notebooks
+RStudio is great, adn we can work directly in the console and use scripts with RStudio. Working with scripts has the advantage of helping us iteratively work on code and make our code reproducible.
+
+Many R users work with scripts exclusively, and there's nothing wrong with a script-based workflow. However, using R Notebook allows us to combine your writeup, code, and code output (think visualizations) into a single, rendered document we can use to communicate what we did and why it's important, which is the essence of data science. R Notebooks also make it easy to share our work, even with those who don't use R.
+
+To get started, we'll outline the steps below:
+1) Open up an R Notebook in RStudio
+2) Look at the panel notebook that shows as a result
+3) The left panel of the RStudio IDE will consist of a notebook that contains some default formatting and instructions. The top few lines of the notebook specify a default notebook name, and that the output will be an html notebook (you can specify other formats for your output)
+4) Make sure you keep the title and output sections, which you can edit to include information like "author" and "date"
+5) Once you begin working on your notebook, you can delete the instructions beneath the section containing notebook name and output
+6) In an R notebook, you'll usually write text to describe your analyses interspersed with code blocks, which is where you'll run code. To add a new block, click the Insert Chunk button on the toolbar or press Ctrl+Alt+I (or Cmd+Alt+I for Mac users)
+7) When you type text outside of code blocks in an R Notebook, you're using R markdown, a lightweight markup language that can be converted to a variety of output formats. You can simply type paragraphs in plain text, and refer to a markdown cheat sheet if you need to add links, create numbered lists, or change font to bold or italics
+8) Now, try inserting a code block and typing a few lines of code, such as using library() to load some packages like dplyr and readr. You can run your code line by line using Ctrl+Enter (or Cmd+Enter for Mac users) on your keyboard, or you can run all the code in the block using the green arrow in the top left corner of the code block
+9) Since code in one block is often dependent on code in blocks above it (say, if you created a new variable and are now calculating summary statistics for it), you can also choose to run the code in a block and all code in previous blocks
+10) When you save your R notebook (as a .Rmd file), an HTML file containing the code and output (a .nb.html file) will be saved alongside it. When you want to see your rendered notebook, go to File -> Knit Document or press Ctrl+Shift+K (Cmd+Shift+K for Macs) to preview the HTML file
+
+We can open the .nb.html file, which contains a rendered copy of your notebook with all current code block outputs, in any web browser. This makes it easy for us to share our work with anyone, even those who don't have R installed on their machine.
+
+## The NYC Data
+Now it's time to incorporate some additional data into your analysis: Responses to surveys designed to gauge parent, student, and teacher perceptions of the quality of New York City schools. The main questions to consider are:
+* Do student, teacher, and parent perceptions of NYC school quality appear to be related to demographic and academic success metrics?
+* Do students, teachers, and parents have similar perceptions of NYC school quality?
+
+Again, the data can be found here and contains five files: https://data.cityofnewyork.us/Education/2011-NYC-School-Survey/mnz3-dyi8.
+
+The first file, Survey Data Dictionary.xls, contains metadata that will be useful as you decide how to clean and prepare the survey data for analysis.
+
+The next two files, masterfile11_gened_final.xlsx and masterfile11_gened_final.txt, contain survey data for "general education" schools — those that do not specifically serve populations with special needs.
+
+The files masterfile11_d75_final.xlsx and masterfile11_d75_final.txt contain survey data for District 75 schools, which provide special education support for children with special needs such as learning or physical disabilities.
+
+Why are there duplicate files with different extensions for general education and District 75 schools? The data are presented in formats that can be opened using Microsoft Excel (the .xlxs files) and as unformatted text (the .txt files). Either format can be imported into R, but we recommend working with the .txt files, since you can do so using readr. So far, you've used the read_csv() function in the readr package to import files into R since we've worked with .csv (comma separated value) files.
+
+What happens if you try to read the .txt files into R using read_csv()? You'll get an error message, since values in the .txt files are not separated by commas. If you open the file in the text editor, you'll see that the values appear to be separated by tabs.
+
+Consulting the readr documentation suggests that read_tsv() function, for tab separated values, would be a better choice for importing these data.
+
+Sometimes there's a bit of trial and error involved in figuring out the best function for importing a data file into R. When in doubt, don't hesitate to consult the readr documentation and try a few different options.
+
+Now time to get the data ready: follow the steps below to import the files into R as data frames, and use the metadata to make sure you understand the data.
+
+<br>
+
+```{r}
+## add modules
+library(readr)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+
+## import data
+combined <- read_csv("combined.csv") 
+survey <- read_tsv("survey_all.txt")
+survey_d75 <- read_tsv("survey_d75.txt")
+```
+
+<br>
+
+Add text to your R notebook to explain where you downloaded the data from, the packages you've loaded, how you imported the data, and what you learned from the data dictionary. Remember that documentation is just as important as code!
+
+## Simplifying Data Frames
+Now that we've read the data into R and documented the steps we've taken in your R Notebook, take a moment to preview the data frames. Since we used readr functions for import, the data frames are tibbles, and we can simply type the data frame names into the console to see the first ten lines.
+
+It's quickly apparent that the data frames containing survey data are larger than those you've worked with previously (thousands of rows and columns).
+
+Examining the data dictionary indicates that most of the variable columns in these data frames provide granular information about survey responses. For example, the variable s_q1a_1 contains, for each school, the number of students (indicated by "s") that responded to "option 1" of "question 1a."
+
+Since we are interested in what we can learn from survey data about perceptions of school quality to study its relationship with SAT scores, we can likely focus our efforts on the aggregate scores for each school calculated from the survey responses.
+
+Note that the variables in the data dictionary end with _10, whereas the variables in the data table we imported end in _11. Presumably, this data dictionary is referring to names of variables from the previous year, 2010. While this is confusing, such metadata discrepancies are a typical challenge for data scientists working with a new data set.
+
+Let's look back at the variables that seem to contain score values for each school. After a bit of examination, we can see that the variable names refer to schools' scores as determined by different groups' survey responses.
+
+Survey questions assess the following metrics:
+* Safety and Respect
+* Communication
+* Engagement
+* Academic Expectations
+
+The following groups responded to the survey:
+* Parents
+* Teachers
+* Students
+* Total (The average of parent, teacher, and student scores)
+
+We can greatly simplify the data frames, and make them easier to work with, by creating new data frames that contain only variables that contain aggregate scores based on survey results.
+
+In addition to retaining variables with aggregate survey scores, be sure to think about whether any other variables, like dbn, may be necessary for future steps in our analysis (like combining survey data frames with our combined data frame).
+
+Now, let's think about if we need all observations in the data frames. Take a look at the variables in the survey data frames. There's a variable called schooltype that provides information about whether a school is an elementary school, a high school, or has a special designation.
+
+We can filter the general education survey data frame for observations where schooltype has the value "High School", but it looks like the district 75 survey data frame schooltype column contains only the value "District 75 Special Education", which may refer to either high schools or elementary schools.
+
+<br>
+
+```{r}
+## filter survey
+survey_select <- survey %>%
+  filter(schooltype == "High School") %>%
+  select(dbn:aca_tot_11)
+```
+
+<br>
+
+Remember to add quick little documentation comments to what you're doing in the code; it really helps the next programmer who's reading, even if it is you in the future.
+
+## Creating a Single Data Frame for Analysis
+Now that we've simplified them, working with the survey data frames probably feels more manageable. When we look at the first ten rows of the data frame, we're down from thousands of columns to dozens. We can see that the two survey data frames contain most of the same variables: dbn, bn, schoolname, etc.
+
+Eventually, we'll want to join the survey data to the combined data frame containing NYC school demographic and test score data.
+
+First, though, we can combine the general education and District 75 data frames. We can use rbind() to combine data frames, as long as they have the same number of columns.
+
+What if the data frames don't have the same number of columns? Instead of using rbind(), we can use the dplyr function bind_rows(). Since bind_rows(), like other dplyr functions, is designed for manipulating data frames, it provides us with flexibility in situations where data frames have different numbers of variable columns. When we use bind_rows(), the output data frame will contain a column if that column appears in any of the input data frames.
+
+Once we've created a single data frame containing survey data from all NYC schools, we can join that data frame to combined using DBN as a key. Remember to choose the right type of join! Specifically, ones that are appropriate to the questions:
+* Do student, teacher, and parent perceptions of NYC school quality appear to be related to demographic and academic success metrics?
+* Do students, teachers, and parents have similar perceptions of NYC school quality?
+
+<br>
+
+```{r}
+## select columns needed for analysis from `survey_d75`
+survey_d75_select <- survey_d75 %>%       
+  select(dbn:aca_tot_11)
+
+## combine data frames
+survey_total <- survey_select %>% 
+  bind_rows(survey_d75_select)
+
+## rename so we can use key
+survey_total <- survey_total %>%
+  rename(DBN = dbn)
+
+## join data frames using a left join
+combined_survey <- combined %>%
+  left_join(survey_total, by = "DBN")
+```
+
+<br>
+
+If we're interested in relationships of survey data with variables in the combined data frame, it makes sense to join the survey data to combined using left_join(), which will retain only observations in the survey data frame that correspond to observations in combined.
+
+## Interesting Correlations and Relationships - Scatter Plots
+Now that we've created a single, clean data frame to work with, we can begin our analysis.
+
+Let's think about the first question: Do student, teacher, and parent perceptions of NYC school quality appear to be related to demographic and academic success metrics?
+
+To get an idea of which demographic and test score variables may be related to parent, teacher, and student perceptions of NYC school quality, we can make a correlation matrix.
+
+Then, we can create scatter plots to examine potentially interesting relationships more closely.
+
+<br>
+
+```{r}
+## create correlation matrix to look for interesting relationships
+cor_mat <- combined_survey %>%    ## interesting relationshipsS
+  select(avg_sat_score, saf_p_11:aca_tot_11) %>%
+  cor(use = "pairwise.complete.obs")
+
+## convert it to a tibble so it's easier to work with using tidyverse tools
+cor_tib <- cor_mat %>%
+  as_tibble(rownames = "variable")
+
+## look for strong correlations 
+strong_cors <- cor_tib %>%
+  select(variable, avg_sat_score) %>%
+  filter(avg_sat_score > 0.25 | avg_sat_score < -0.25)
+
+## make scatter plots of these variables 
+## first the function
+create_scatter <- function(x, y) {     
+  ggplot(data = combined_survey) + 
+    aes_string(x = x, y = y) +
+    geom_point(alpha = 0.3) +
+    theme(panel.background = element_rect(fill = "white"))
+}
+
+## then the variables
+x_var <- strong_cors$variable[2:5]
+y_var <- "avg_sat_score"
+  
+## and finally map the plot
+map2(x_var, y_var, create_scatter)
+```
+
+<br>
+
+The extra parameters added to our plots like alpha and background color are especially important when presenting multiple plots and graphs - sometimes the best thing for a reader to understand the data is the visual elements.
+
+## Differences in Perceptions: Reshaping the Data 
+Some questions to consider:
+* Did you find that scores based on survey responses from parents, students, and teachers displayed different relationships with the same metric?
+* Was this surprising to you?
+
+It would be interesting to see whether parents, students, and teachers have similar perceptions about the four school quality metrics they were surveyed about:
+* Safety and Respect
+* Communication
+* Engagement
+* Academic Expectations
+
+There are a few ways that we can answer this question. We may choose to group the data by question and survey response type (parent, student, teacher, or total) and then calculate a summary average for each group. Since visualizations of data are often easier to interpret, perhaps we'll choose to explore differences in scores among groups using box plots.
+
+In either case, think about the current format of the data frame. If we choose to perform this analysis using tidyverse package functions like group_by() and summarize() or ggplot(), we will need to reshape the data.
+
+Here's how the columns of your data frame are currently formatted: https://s3.amazonaws.com/dq-content/327/current_format.svg.
+
+In order to use the metric (safety and respect, communication, engagement, and academic expectations) and response type (student, parent, teacher, total) as grouping factors or to create box plots, we'll need to reshape the data and create some new variables so that the data frame looks like this: https://s3.amazonaws.com/dq-content/327/gathered_format.svg.
+
+<br> 
+
+```{r}
+## reshape data
+combined_survey_gather <- combined_survey %>%                         
+  gather(key = "survey_question", value = score, saf_p_11:aca_tot_11)
+
+## use `str_sub()` to create new variables, `response_type` and `question`, from the `survey_question` variable
+combined_survey_gather <- combined_survey_gather %>%
+  mutate(response_type = str_sub(survey_question, 4, 6)) %>%   
+  mutate(question = str_sub(survey_question, 1, 3))
+
+## replace `response_type` variable values with names "parent", "teacher", "student", "total" using `if_else()` function
+combined_survey_gather <- combined_survey_gather %>%
+  mutate(response_type = ifelse(response_type  == "_p_", "parent", 
+                                ifelse(response_type == "_t_", "teacher",
+                                       ifelse(response_type == "_s_", "student", 
+                                              ifelse(response_type == "_to", "total", "NA")))))
+
+## make boxplot to see differences
+combined_survey_gather %>%
+  filter(response_type != "total") %>%
+  ggplot() +
+  aes(x = question, y = score, fill = response_type) +
+  geom_boxplot()
+```
+
+<br>
+
+We can see how after the new re-grouping, we could easily explore the differences in how parents, students, and teachers perceive metrics related to NYC school quality. This helped to answer the question that yes, it does appear that student, teacher, and parent perceptions of NYC school quality is related to demographic and academic success metrics!
+
+## Further Analysis / Next Steps
+There is still obviously a lot to do in this project, but we got the basis of analysis down from data clean-up to visualization!
+
+The next steps are basically tailored to the user. You can explore any questions that you yourself find interesting in the data, and who knows, this may even lead to a first-time-ever discovery within the data.
+
+It is important to remember to always use code like above as a foundation, but each individual project will end up slightly different. Sort of like branches off of a tree (Git syntax makes a lot more sense now). Below we will describe a few more questions to explore, but they are by no means mandatory, and if you can think of something more interesting, that is recommended.
+
+## Questions to Consider
+Here are a few interesting topics to go down the rabbit hole with:
+* Is there a relationship between gender percentages and average SAT scores? How about for the different sections of the SAT (Reading, Writing, and Math)?
+* Which NYC schools seem to have the best quality metrics according to survey data? Is there a difference if you break this down by response type?
+* Can you learn anything from the differences in school quality metric perception between groups? For example, if you created a new variable by subtracting saf_p_11 from saf_p_11, do you think this difference in how students and parents perceive safety may be related to any other variables?
+
+Like every project, and probably a broken record by now for these projects - but the possibilities are endless. Exploring all three of the questions above are most likely not even going to happen! Most likely, you'll pick one, generate a more interesting POV off of that one, and keep going from there.
+
+In the end, what you'll most likely end up with is an interesting project unique to your own interests, so fire away!
+
+## Conclusion
+In this project, we actually did a lot - even if there was not much code in ratio - the beauty of languages like R:
+* Cleaned and combined fairly large data sets with many variables and confusing metadata.
+* Used correlation analysis to highlight potentially interesting relationships between variables and explored them in greater depth using scatter plots.
+* Reshaped your data frame, created new variables, and used them to explore differences among groups' perceptions of NYC school quality.
+* Began the basis of using R notebooks in RStudios for R projects.
+
+R, just like Python, and just like almost every language in data science, follows a similar workflow: find data sets that interest you, import them, clean them, and analyze them to answer questions and make predictions, build models, etc. Don't forget the writeup and documentation too!
+
+While this project wasn't exactly groundbreaking, every groundbreaking project certainly starts off with the basics used here. Progression is very real in data science, and we only go up from here.

@@ -1,0 +1,181 @@
+# Analyzing CIA Factbook Data Using SQLite and R Notes
+This quick project will part of a few written in R (and probably the last of the dataquest "series") to get familiar with the language. The formatting will be in an already familiar markdown style. This will actually be a rework of Project 10.1 (the Python version in the Data Analysis repo), so basic R code will be shown as a guide and example of conversion, but for full analysis to questions check out that project, and for more R projects, check out the other projects in the R Github repo.
+
+## Introduction
+For this project, we'll work with data from the CIA World Factbook, a compendium of statistics about all of the countries on Earth. As stated above, this project is actually a re-work of a previous existing project in Python (10.1 - Analyzing CIA Factbook Data Using SQLite and Python), so while the code will be in R and analysis will be done, it will not go too in-depth as we will just end up answering the same questons and explaining the same things. Conceptually, the only difference here is language. 
+
+This also shows that it doesn't really matter what language you use to answer research questions, as long as you do it well! With that being said, for a more complete version of this project, look for the Python version.
+
+As a refresher, the Factbook contains demographic information like:
+* population - The population as of 2015.
+* population_growth - The annual population growth rate, as a percentage.
+* area - The total land and water area.
+
+The file and data can be found here: https://github.com/factbook/factbook.sql/releases.
+
+We can use dbGetQuery() to put the data directly into a data frame. The main focus of the project should be incorporating SQL into R.
+
+Time to get connected with the data!
+
+Note: All code in this project will be preceded and followed by a break, and also follow the {r} markdown symbol.
+
+Note 2: Perhaps useful cheatsheet on R markdown: https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf.
+
+<br>
+
+```{r}
+## add modules
+library(readr)
+library(dplyr)
+library(RSQLite)
+library(DBI)
+library(tidyr)
+library(ggplot2)
+
+## look at tables
+dbListTables(conn)
+
+## run a quick query
+conn <- dbConnect(SQLite(), "facts.db")
+query <- "SELECT * FROM facts LIMIT 5"
+results <- dbSendQuery(conn, query)
+first_five <- dbFetch(results, n=5)
+
+## remember to clear when applicable
+dbClearResult(results)
+```
+
+<br>
+
+The syntax for this is a bit different, but so far we can see that it is actually quite similar to Python in terms of connecting.
+
+## Summary Statistics
+The first thing any data scientist should do with a dataset is to look at it. From our last query, we can preview the first few rows of our facts table.
+
+Here are the descriptions for some of the columns:
+* name - The name of the country.
+* area - The total land and sea area of the country.
+* population - The country's population.
+* population_growth- The country's population growth as a percentage.
+* birth_rate - The country's birth rate, or the number of births a year per 1,000 people.
+* death_rate - The country's death rate, or the number of death a year per 1,000 people.
+* area- The country's total area (both land and water).
+* area_land - The country's land area in square kilometers.
+* area_water - The country's waterarea in square kilometers.
+
+Let's calculate some summary statistics and check for any outlier countries.
+
+<br>
+
+```{r}
+## calculate min/max population, min/max population growth
+query <- "SELECT MIN(population) as min_pop, MAX(population) as max_pop, MIN(population_growth) as min_pop_growth, MAX(population_growth) as max_pop_growth FROM facts"
+results <- dbSendQuery(conn, query)
+summary_statistics <- dbFetch(results)
+
+## housekeeping
+dbClearResult(results)
+```
+
+<br>
+
+We can see 4 basic summary statistic here for population easily, and store it in our variable. Whatever else you wish to calcalte that is of interest can also go into this result too. No need to make X different queries to answer X different summary questions, unless needed to!
+
+## Exploring Outliers
+A few things stick out from the summary statistics:
+* there's a country with a population of 0
+* there's a country with a population of 7256490011 (or more than 7.2 billion people)
+
+Let's zoom in on just these countries to get a better look at them:
+
+<br>
+
+```{r}
+## return the country with pop 0
+query1 <- "SELECT * FROM facts WHERE population == (SELECT MIN(population) FROM facts)"
+results1 <- dbSendQuery(conn, query1)
+min_pop_country <- dbFetch(results1)
+
+## return the country with pop 7256490011
+query2 <- "SELECT * FROM facts WHERE population == (SELECT MAX(population) FROM facts)"
+results2 <- dbSendQuery(conn, query2)
+max_pop_country <- dbFetch(results2)
+
+## housekeeping
+dbClearResult(results1)
+dbClearResult(results2)
+```
+
+<br>
+
+As we can see, the dataset contains both a row for the entire Earth and for Antarctica, which explains the extreme highs and lows!
+
+Note: https://s3.amazonaws.com/dq-content/257/fb_antarctica.png.
+
+## Histograms
+These two outlier rows will skew any visualizations we try to make of our data, so we'll want to exclude them in a revised query.
+
+Once that is done, we'll use tidyverse and geom_histogram to create histograms for each of the columns using the non-outlier rows.
+
+<br>
+
+```{r}
+## get data for pop, pop_growth, birth_rate, death_rate
+query <- "SELECT population, population_growth, birth_rate, death_rate FROM facts WHERE population != (SELECT MAX(population) FROM facts) AND population != (SELECT MIN(population) FROM facts)"
+results <- dbSendQuery(conn, query)
+cols <- dbFetch(results)
+
+## histogram for pop, pop_growth, birth_rate, death_rate
+ggplot(data = cols) + 
+  aes(x = value) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~variable)
+
+## housekeeping
+dbClearResult(results)
+```
+
+<br>
+
+Just like the Python project, this creates pretty simple histograms and allows us to easily identify some relationships in the data. It looks like there's some skew in every one of the graphs, and a good place to start in exploration. Answering these types of questions has already been done in the Python version, however, so go check that out!
+
+## Further Analysis / Next Steps
+We've finished getting data, looking at a few statistical points, and plotted out some charts. This is the basis of every R project, but there are a few other things you can do. As mentioned before, this is all up to your own particular interests and what you would like to see in the data.
+
+Here are a few example questions to explore:
+* Which countries have the highest population density?
+* Are there any particular trends in the birth/death rates in each of the continents?
+* How do migration rates change for each country over time?
+
+A couple of these questions (and an interesting topic of water density of countries!) are fully explored in the Python version of this project. For this version, we'll just quickly go over the first question in R as an example code.
+
+## R Population Density
+Here is how you would go about answering which country has the highest population density in R. It's easier than you think! 
+
+<br>
+
+```{r}
+## get query
+query <- "SELECT name, CAST(population AS float) / CAST(area AS float) as density FROM facts ORDER BY density DESC LIMIT 20"
+results <- dbSendQuery(conn, query)
+density <- dbFetch(results)
+
+## top density
+top <- density[1]
+
+## housekeeping
+dbClearResult(results)
+```
+
+<br>
+
+That's it! This will create a table with the countries with highest density being higher up. We can see that Macau has the highest population density in the world according to the facts.db, and it's easy to understand why, given their size. 
+
+Hopefully, this makes it easy to also see that research questions can often be easily answered and shown with the right code. This can avoid multiple headaches and it does not take much effort at all (although sometimes it will). R is powerful, use it wisely!
+
+## Conclusion
+In this 'short' project, we successfully converted a project that was written in Python code into R code. Although we did not go as in-depth as the Python version, this was only due to avoid the redundancy of answering the same things in a factbook domain sense rather than not being able to do things in a coding domain sense.
+
+Python and R are both powerful tools that can help with any data science project, and you can often do entire projects using just one of them. In fact, many people do. It doesn't hurt to know both, however! This project showed that going from Python to R is not hard at all, and whenever you feel like another language may be better suited for your project even though you have already started, it may still be worth it to switch; at least for Python and R, much of the intuition is the same.
+
+Moving forward, (if anyone is even reading this), this will probably be the last dataquest given project that will be posted on my Github (#36.1) :). Dataquest has given me a significant amount of knowledge (this cannot be stressed enough; I feel very confident in my data scientist skills and feel competitive for any future position) to pursue my own interests now and I probably will not be needing any templates in the future. I will however, post new dq projects if I find them interesting, as they do a very good job of continuously posting new templates each month (and these will be either marked as #37+ or tacked on to an existing project number depending on relevance; for example, I have already tacked on #6.3 retroactively months after completing #6.2 because I found the new project topic interesting, and it fit well in the #6 series). There is nothing inherently wrong with using project templates; it doesn't make things any easier (so don't think that they do and slack!!!), but there are infinite amounts of new ideas for me to explore personally! New personal projects will therefore be marked so in Github outside of these repos, and in whichever respective repo that I believe to be best fit. Thank you, and as always, data science is a continuous journey!

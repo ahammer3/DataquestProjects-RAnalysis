@@ -1,0 +1,187 @@
+# RStudio Notes
+This short document is a quick how-to lookup guide for installing and getting R and RStudio started on your machine. Refer to this quickly if there are ever any problems. Project notes wrriten in markdown for quick transferability.
+
+The installation and startup notes will be split into 8 parts for easy reading and view.
+
+## Introduction
+1) When you work in RStudio, you'll be able to see your code, notes, objects, and figures organized in multiple panels of a single screen.
+
+What exactly is RStudio, and why are we installing it in addition to R?
+
+"While the R language dates back to 1995, RStudio was introduced in 2011. RStudio is a free, open-source Integrated Development Environment (IDE), a software suite designed to organize all your programming tasks in one place and improve the efficiency of your workflow. While there are other IDEs available for use with R (Microsoft Visual Studio for R and Eclipse), RStudio is by far the most popular."
+
+Using RStudio for your data science workflow provides many advantages:
+* An intuitive interface that lets you keep track of saved objects, scripts, and figures
+* A text editor with features like color-coded syntax that helps you write clean scripts
+* An autocomplete feature
+* Tools for creating documents containing a project's code, notes, and visuals
+
+The RStudio team is also behind many new packages that expand R's data science capabilities (like the tidyverse)!
+
+One last note: if there are ever any problems outside of the scope of these notes or a new problem not quite captured in here - most likely someone else has experienced it as well. StackOverflow is a godsend.
+
+## Installing R
+2) Before you can install RStudio, you'll need to have a recent version of R installed on your computer. Once you have R, go to: https://cran.r-project.org/.
+
+You should see right away a section to "Download and Install R", with three different options. The version of R that you download will depend on your operating system. Below is included installation instructions for Mac OS X, Windows, and Linux (Ubuntu).
+
+For OS X:
+	a) Select the Download R for (Mac) OSX option.
+
+	b) Select the most up-to-date version of R (new versions are released frequently).
+
+	c) Follow the standard instructions for installing applications on OS X.
+
+	d) Drag and drop the R application into your Applications folder.
+
+For Windows:
+	a) Select the Download R for Windows option.
+
+	b) Select base, since this is your first installation of R on your computer.
+
+	c) Follow the standard instructions for installing programs for Windows. If you are asked to select: Customize Startup or Accept Default Startup Options, choose the default options.
+
+For Linux/Ubuntu:
+	a) Select the Download R for Linux option.
+
+	b) Select the Ubuntu option.
+
+After you've installed R, open the console and try writing a few expressions (2 + 2).
+
+## Installing RStudio
+3) Now that you've installed R, you can install RStudio. Navigate to the RStudio downloads page: https://www.rstudio.com/products/rstudio/download/.
+
+When you reach the RStudio downloads page, select the RStudio Desktop Open Source License FREE option. This should take you to a page of different installation options again.
+
+If you're running OS X or Windows, select the corresponding option. For Ubuntu, you'll see 32 bit or 64 bit options, which refer to a computer's instruction set.
+
+If you're unsure whether you should install the 32 or 64 bit option for your computer, check here: https://askubuntu.com/questions/41332/how-do-i-check-if-i-have-a-32-bit-or-a-64-bit-os.
+
+Download RStudio from http://rstudio.org/download/desktop. Choose RStudio Desktop (FREE).
+
+Then, follow the appropriate installation instructions for your computer's operating system:
+
+For OS X:
+	a) Select the Mac OSX version.
+
+	b) Install RStudio by dragging into Applications folder.
+
+For Windows:
+	a) Select the Windows version.
+
+	b) Download and open RStudio from programs.
+
+For Ubuntu:
+	a) Select the Ubuntu 32 or 64 bit version.
+
+	b) Download and open RStudio.
+
+Once you've got RStudio installed and running, take some time to familiarize yourself with its layout. Don't worry too much if many of the features lack context. For now, experiment with resizing the windows and clicking through the tabs.
+
+## Working in the Console (R)
+4) Let's start off by introducing some features of the console. In RStudio, the console is located in the bottom left corner.
+
+You may notice the highlighted portion of the RStudio interface contains two tabs: console and terminal. We'll focus on the console for now, which is where you'll be doing most of your programming work.
+
+When you open RStudio, the console contains information about the version of R you're working with. Scroll down, and try typing a few expressions.
+
+You can use the console to test code immediately. When you type an expression like 45 + 5, you'll see the output below after hitting enter.
+
+If you type code to create data visualization plots into the console, the plots will appear in the plots tab in the window at the bottom right of the interface.
+
+When you learn about creating data visualizations in upcoming courses, you'll appreciate the usefulness of this feature!
+
+Try typing the expression (without quotes): "3 * (5+6+10". Note what happens if you forget to close a pair of parentheses.
+
+You can either type the second half of the pair of parentheses after the + symbol in the console, or escape the expression by hitting your Escape key.
+
+One nice feature from RStudio is a keyboard shortcut for typing the assignment operator <-. For Windows and Linux this is "Alt" + "-" and for Mac it is "Option" + "-".
+
+Try creating a vector (without quotes): "vector_1 <- c(1,3,5,7,8,9)".
+
+Type vector_1 into the console, and you'll see the output.
+
+Try getting the mean (without quotes): "mean(vector_1)".
+
+Notice that as you begin typing mean() into the console, a list of functions beginning with "m" pops up. You can either use your touchpad, mouse, or the arrow keys on your keyboard to select a function, and it will appear in the console.
+
+When you create a vector in RStudio, it is saved as an object in the R global environment. More on that next.
+
+## The Global Environment
+5) You can think of the global environment as your workspace. During a programming session in R, any variables you define or data you import and save in a data frame are stored in your global environment. In RStudio, you can see the objects in your global environment in the Environment tab at the top right of the interface.
+
+You'll see any objects you created, like vector_1, under values in the Environment tab. Notice that the data type ([num]) and the values stored in the vector are also displayed.
+
+Sometimes, having too many named objects in the global environment creates confusion. Maybe you'd like to remove all or some of the objects. To remove all objects, click the broom icon at the top of the window.
+
+If you want to remove selected objects from the workspace, select the grid view from the dropdown menu.
+
+Next, check the boxes of the objects you'd like to remove and use the broom icon to clear them from your global environment.
+
+## Importing Data
+6) When you write code to import a data set into RStudio, it's best to make sure that you have the working directory set to the location where your data files are stored. Otherwise, you'll have to specify the file location.
+
+There are a few ways to set the working directory in RStudio:
+* Use the setwd() function. For example, if you wanted to set my working directory to my desktop, you would type: setwd("~/Desktop").
+* Navigate to and choose the working directory from the Session menu.
+
+To print your working directory in the console, you can type getwd().
+
+You'll often want to import data into R. You learned to use the read_csv() function in the readr package to import data and assign the data frame to a variable. Data sets you import into R as data frames will be displayed in the Environment tab as well.
+
+Note: As an alternative to typing code in the console, you can import data sets into RStudio using the Import Dataset feature in the Environment tab.
+
+It is recommended to use the readr option, which uses functions like read_csv(). Using the readr package will import your data as a specialized data frame called a tibble, which has many advantages for improving your data science workflow.
+
+If you import data into R using the Import Dataset feature, the data will be automatically displayed in a tab in the window in the top left of the interface.
+
+If you import your data into R by typing functions like read_csv() in the console, R does not automatically open the data file. To display your data, use the function View(). For example (without quotes): "View(dataset_here)".
+
+There are two additional tabs in this window: History and Connections. Connections is used for working with databases in RStudio, and History contains a saved record of commands you have ever typed into the console. This can be a useful feature if you forgot something you did a few weeks ago and need to access your code.
+
+Searching through your code history can be frustrating, though. It's helpful to organize and save your code using scripts.
+
+## Writing Scripts
+7) As your projects become more complex and you write longer blocks of code, it will be helpful to organize your code into a script (instead of a text editor and console all the time). This allows you to keep track of your work on a project, write clean code with plenty of notes, repeatedly run code, and share it with others - **much like a Python script**.
+
+In RStudio, you can write scripts in the text editor window at the top left of the interface.
+
+To create a new script, you can use the commands in the file menu. You can also use the keyboard shortcut "Ctrl" + "Shift" + "N".
+
+When you save a script, it has the file extension ".R".
+
+Create a new script, and try typing an expression. To run the line of code you typed into your script in the console below, you can either click run at the top right of the script, or use the following keyboard commands: "Cmd" + "Enter" for OS X, "Ctrl" + "Enter" for Windows/Linux.
+
+You can also highlight multi-line chunks of your code that you want to run.
+
+Sometimes, you'll write a script you want to run all at once. To highlight all the code in your script, it is the same as any other software program ("Ctrl" + "a").
+
+When writing a script, it's good practice to begin at the top by writing code to load the packages you'll need to run the script:
+
+
+# example code
+library(readr)
+library(dplyr)
+
+
+If you need to check which packages you have loaded, you can refer to the Packages tab in the window at the bottom right of the console. You can search for packages, and checking the box next to a package will load it (the code will appear in the console).
+
+Note: "As you write scripts, it's good practice to get used to adding comments to them to explain your code (# like this). Often, in your career as a data scientist, you'll likely share your code with colleagues and collaborators. Ensuring they understand your methods will be very important."
+
+## Accessing Saved Scripts
+8) You'll know when a script has been saved, because the name text will be black.
+
+When a script has unsaved changes, it will show up as red and will be followed by an asterisk.
+
+After you've written some practice code in your script, save it, and then close the script.
+
+To open a saved script, you can use either of the following methods:
+* Go to File > Open File and navigate to the script.
+* Navigate to the script in the Files tab in the window in the bottom right screen of the interface.
+
+Once a script is opened, you can play around freely.
+
+## Conclusion
+That's it! You now have R as well as RStudio working on your machine and know the basis of how each works, as well as their layouts. Even though this was a pretty basic tutorial guide/notes, hopefully a documented process can get you going, or help someone out in a specific spot. 
+
+There are many more features to be explored, so don't be shy! Happy Programming!
